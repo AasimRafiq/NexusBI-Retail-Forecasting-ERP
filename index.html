@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusBI — Enterprise Retail ERP, Demand Forecasting & Margin Engine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">NX</div>
+        <div>
+          <h2>NexusBI ERP</h2>
+          <span>Retail & Demand Engine</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="dashboardTab">
+          <span>Executive BI & Forecast</span>
+          <small>Linear Regression</small>
+        </button>
+        <button class="nav-btn" data-tab="posTab">
+          <span>POS Checkout Terminal</span>
+          <small>Barcode & Billing</small>
+        </button>
+        <button class="nav-btn" data-tab="inventoryTab">
+          <span>ABC Inventory Matrix</span>
+          <span id="lowStockBadge" class="badge-alert">0</span>
+        </button>
+        <button class="nav-btn" data-tab="ledgerTab">
+          <span>Audit & Sales Ledger</span>
+          <small>Transaction Log</small>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="seedSampleDataBtn" class="btn-ghost-dark">+ Inject 14-Day Sales Data</button>
+        <button id="exportCsvBtn" class="btn-ghost-dark">Export BI Report (.CSV)</button>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="workspace">
+      <header class="header">
+        <div>
+          <h1 id="viewTitle">Executive BI & Demand Forecasting</h1>
+          <p id="viewDesc" class="muted">Real-time profit analytics, 7-day OLS linear regression forecast, and AI copilot</p>
+        </div>
+        <div class="header-meta">
+          <span class="status-pill"><i class="pulse"></i> Predictive Engine Active</span>
+        </div>
+      </header>
+
+      <!-- TAB 1: EXECUTIVE BI & FORECASTING -->
+      <section id="dashboardTab" class="tab-panel active">
+        <div class="kpi-row">
+          <div class="kpi">
+            <span>Cumulative Revenue</span>
+            <strong id="kpiRev">PKR 0</strong>
+            <small id="kpiRevSub" class="pos">0 invoices</small>
+          </div>
+          <div class="kpi">
+            <span>Net Gross Profit</span>
+            <strong id="kpiProfit">PKR 0</strong>
+            <small id="kpiMarginSub" class="pos">0% margin</small>
+          </div>
+          <div class="kpi">
+            <span>Next-Day Forecast (OLS)</span>
+            <strong id="kpiForecast">PKR 0</strong>
+            <small id="kpiTrendSub" class="neutral">Trend slope: 0</small>
+          </div>
+          <div class="kpi">
+            <span>Inventory Valuation (Cost)</span>
+            <strong id="kpiInvVal">PKR 0</strong>
+            <small id="kpiSkuCount" class="muted">0 active SKUs</small>
+          </div>
+        </div>
+
+        <div class="bi-grid">
+          <!-- SVG REVENUE & FORECAST CHART -->
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>14-Day Revenue & 7-Day Regression Forecast</h3>
+                <p class="muted">Solid bars: Historical daily revenue • Dashed bars: Linear trend projection</p>
+              </div>
+              <div class="legend">
+                <span><i class="lg-box actual"></i> Actual</span>
+                <span><i class="lg-box pred"></i> Forecast</span>
+              </div>
+            </div>
+            <div id="forecastChartContainer" class="chart-stage"></div>
+          </div>
+
+          <!-- AI INVENTORY & FINANCIAL COPILOT -->
+          <div class="card copilot-box">
+            <div class="card-head">
+              <div>
+                <span class="tag-blue">AI FINANCIAL & STOCK COPILOT</span>
+                <h3 style="margin-top:4px;">Natural Language BI Query</h3>
+              </div>
+            </div>
+            <div id="biChatFeed" class="chat-feed">
+              <div class="bubble bot">NexusBI Copilot ready. Try asking: <em>"forecast next week"</em>, <em>"dead stock"</em>, <em>"highest margin product"</em>, or <em>"reorder plan"</em>.</div>
+            </div>
+            <form id="biChatForm" class="chat-input">
+              <input type="text" id="biQueryInput" placeholder="Ask about margins, forecast, or reorder quantities..." required />
+              <button type="submit">Query</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: POS CHECKOUT TERMINAL -->
+      <section id="posTab" class="tab-panel hidden">
+        <div class="pos-split">
+          <div class="card">
+            <div class="pos-bar">
+              <input type="text" id="posSearch" placeholder="Scan SKU code or search product name..." />
+              <select id="posCatFilter">
+                <option value="ALL">All Categories</option>
+              </select>
+            </div>
+            <div id="posProductGrid" class="sku-grid"></div>
+          </div>
+
+          <aside class="card checkout-card">
+            <div class="checkout-head">
+              <h3>Current Invoice</h3>
+              <button id="resetCartBtn" class="link-danger">Clear</button>
+            </div>
+            <div id="posCartList" class="cart-scroll"></div>
+
+            <div class="checkout-summary">
+              <input type="text" id="clientName" placeholder="Customer / Walk-in Client" />
+              <div class="discount-row">
+                <label>Discount (%)</label>
+                <input type="number" id="discountPct" value="0" min="0" max="50" />
+              </div>
+              <div class="totals-box">
+                <div><span>Subtotal</span><span id="cSub">PKR 0</span></div>
+                <div><span>Discount</span><span id="cDisc">-PKR 0</span></div>
+                <div><span>Tax (5%)</span><span id="cTax">PKR 0</span></div>
+                <div class="net-line"><span>Net Payable</span><strong id="cNet">PKR 0</strong></div>
+              </div>
+              <button id="finalizeSaleBtn" class="btn-accent" disabled>Finalize & Post to Ledger</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- TAB 3: ABC INVENTORY CLASSIFICATION MATRIX -->
+      <section id="inventoryTab" class="tab-panel hidden">
+        <div class="inv-split">
+          <div class="card">
+            <h3>Register / Update SKU</h3>
+            <form id="skuForm" class="stack">
+              <label>SKU Code <input type="text" id="sSku" placeholder="e.g. TECH-204" required /></label>
+              <label>Product Title <input type="text" id="sName" placeholder="e.g. GaN 65W PD Charger" required /></label>
+              <label>Category
+                <select id="sCat">
+                  <option value="Chargers & Power">Chargers & Power</option>
+                  <option value="Protection & Cases">Protection & Cases</option>
+                  <option value="Audio & Wearables">Audio & Wearables</option>
+                  <option value="Cables & Adapters">Cables & Adapters</option>
+                </select>
+              </label>
+              <div class="two-grid">
+                <label>Unit Cost (PKR) <input type="number" id="sCost" min="10" required /></label>
+                <label>Retail Price (PKR) <input type="number" id="sPrice" min="20" required /></label>
+              </div>
+              <div class="two-grid">
+                <label>Current Stock <input type="number" id="sStock" min="0" required /></label>
+                <label>Reorder Point <input type="number" id="sReorder" min="1" value="6" required /></label>
+              </div>
+              <button type="submit" class="btn-accent">Save SKU to Catalog</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>ABC Pareto Inventory Classification</h3>
+                <p class="muted">Class A: Top 70% revenue drivers • Class B: Next 20% • Class C: Bottom 10%</p>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="erp-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th>ABC Tier</th>
+                    <th>Unit Margin</th>
+                    <th>Stock / Min</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="abcTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: AUDIT & SALES LEDGER -->
+      <section id="ledgerTab" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-head">
+            <h3>Immutable Transaction Audit Log</h3>
+            <span id="ledgerCount" class="muted">0 entries</span>
+          </div>
+          <div class="table-scroll">
+            <table class="erp-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Line Items</th>
+                  <th>Revenue</th>
+                  <th>COGS</th>
+                  <th>Net Profit</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
